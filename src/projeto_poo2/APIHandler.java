@@ -60,24 +60,23 @@ public class APIHandler {
                     + "time_period=10&"
                     + "series_type=close&"
                     + "apikey=" + APIKey);
-            try {
-                URLConnection request = url.openConnection();
-                request.connect();
 
-                JsonParser jp = new JsonParser();
-                JsonObject root;
-                root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
-                        .getAsJsonObject();
-            
+            URLConnection request = url.openConnection();
+            request.connect();
+
+            JsonParser jp = new JsonParser();
+            JsonObject root;
+            root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
+                    .getAsJsonObject();
+
+            if (root.has("Information")) {
+                throw new IOException(root.get("Information").getAsString());
+                
+            } else if (root.has("Technical Analysis: SMA")) {
                 timestamps = root.get("Technical Analysis: SMA").getAsJsonObject();
-                done = true;
-            } catch(NullPointerException e) {
-                tryCount++;
-                if (tryCount > 2) {
-                    throw e;
-                }
             }
-        
+
+            done = true;        
         }
 
         int i = 1;
@@ -116,25 +115,23 @@ public class APIHandler {
                     + "interval=" + String.valueOf(minutesInterval) + "min&"
                     + "apikey=" + APIKey + "&"
                     + "dataype=json");
-            try {
-                URLConnection request = url.openConnection();
-                request.connect();   
+            
+            URLConnection request = url.openConnection();
+            request.connect();   
 
-                JsonParser jp = new JsonParser();
-                JsonObject root;
-                root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
-                    .getAsJsonObject();
+            JsonParser jp = new JsonParser();
+            JsonObject root;
+            root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
+                .getAsJsonObject();
 
+            if (root.has("Information")) {
+            throw new IOException(root.get("Information").getAsString());
+
+            } else if (root.has("Time Series (1min)")) {
                 timestamps = root.get("Time Series (1min)").getAsJsonObject();
-                done = true;
-            } catch (NullPointerException e) {
-                tryCount++;
-                System.out.println(tryCount);
-                if (tryCount > 2) {
-                    System.out.println(tryCount);
-                    throw e;
-                }
             }
+
+            done = true;
         } 
         
         int i = 1;

@@ -15,12 +15,11 @@ public class Equity {
         this.code = code;
         
         this.alertPanel = new AlertPanel(name);
+        alertPanel.setVisible(true);
     }
     
     public void initChart(TimeSeries data, TimeSeries sma) {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
-        this.sma = sma;
-        this.data = data;
         dataset.addSeries(sma);
         dataset.addSeries(data);
         this.chart = ChartFactory.createTimeSeriesChart(
@@ -43,18 +42,21 @@ public class Equity {
         renderer.setSeriesStroke(1, new BasicStroke(0.5f));
         
         plot.setRenderer(renderer);
+        
+        this.sma = sma;
+        this.data = data;
+        if ((Double) this.data.getValue(data.getItemCount()-1) > (Double) this.sma.getValue(sma.getItemCount()-1)) {
+            alertPanel.setBuy();
+        } else {
+            alertPanel.setSell();
+        }
+        
+        alertPanel.setSMA((Double) this.sma.getValue(sma.getItemCount()-1));
+        alertPanel.setValue((Double) this.data.getValue(data.getItemCount()-1));
     }
 
     
     // Getters and setters
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
     public String getName() {
         return name;
     }
@@ -65,10 +67,6 @@ public class Equity {
 
     public AlertPanel getAlert() {
         return alert;
-    }
-    
-    public void updateState() {
-
     }
     
     public TimeSeries getData() {
@@ -85,17 +83,9 @@ public class Equity {
         else
             throw new NullPointerException("You must initiate the chart");
     }
-    public AlertPanel getNewAlertPanel() {
-        if (data.getDataItem(0).getValue().doubleValue() > sma.getDataItem(0).getValue().doubleValue()) {
-            alertPanel.setSell();
-        } else {
-            alertPanel.setBuy();
-        }
-        
+    public AlertPanel getAlertPanel() {        
         return alertPanel;
     }
-    
-    
     
     // Properties
     private AlertPanel alertPanel;

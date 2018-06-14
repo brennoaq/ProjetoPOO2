@@ -1,6 +1,5 @@
 package projeto_poo2;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -11,16 +10,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
+import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import org.jfree.chart.ChartPanel;
 import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
 
 public class MainFrame extends javax.swing.JFrame {
 
@@ -43,16 +39,17 @@ public class MainFrame extends javax.swing.JFrame {
         ActionListener task = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                statusLabel.setText("Atualizando gráficos...");
-                updateCharts();
-                updateAlerts();
-                statusLabel.setText("Graficos atualizados! " + ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.SECONDS));
+                if(!updater.isAlive()) {        // Checking if updater is not running, if it is, is  not necessary to call it again
+                    runUpdateThread();
+                }
             }
         };
         
         timer = new Timer(60000, task);
-        timer.start();
         timer.setRepeats(true);
+        timer.start();
+        
+        alertPane.setLayout(new BoxLayout(alertPane, BoxLayout.Y_AXIS));
     }
 
     /**
@@ -78,6 +75,8 @@ public class MainFrame extends javax.swing.JFrame {
         setResizable(false);
 
         graphsPane.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        alertPane.setDoubleBuffered(false);
 
         javax.swing.GroupLayout alertPaneLayout = new javax.swing.GroupLayout(alertPane);
         alertPane.setLayout(alertPaneLayout);
@@ -228,14 +227,16 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_removeEquityActionPerformed
     private void runUpdateThread() {
-        new Thread(new Runnable() {
+        updater = new Thread(new Runnable() {
             @Override
             public void run() {
-                 updateCharts();
-                 updateAlerts();
-                 
+                statusLabel.setText("Atualizando gráficos...");
+                updateCharts();
+                statusLabel.setText("Graficos atualizados! " + ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.SECONDS));  
             }
-        }).start();
+        });
+        
+        updater.start();
     }
     private void updateCharts() {
         TimeSeries sma;
@@ -273,11 +274,14 @@ public class MainFrame extends javax.swing.JFrame {
                         tabInGraphs = true;
                         
                         ChartPanel panel = (ChartPanel) graphsPane.getComponentAt(j);
-                        panel.setChart(item.getEquity().getChart());                        
+                        panel.setChart(item.getEquity().getChart()); 
+                        panel.setDomainZoomable(false);
+                        panel.setRangeZoomable(false);
                     }
                 }
                 
                 if (!tabInGraphs) {
+                    statusLabel.setText("Criando aba " + item.getText());
                     ChartPanel chartPanel = new ChartPanel(item.getEquity().getChart());
                     chartPanel.setDomainZoomable(false);
                     chartPanel.setRangeZoomable(false);
@@ -286,34 +290,28 @@ public class MainFrame extends javax.swing.JFrame {
                     statusLabel.setText("Aba " + item.getText() + " criada!");
                 }
                 //
+                
+                boolean contains = new ArrayList(Arrays.asList(alertPane.getComponents()))
+                                                 .contains(item.getEquity().getAlertPanel());
+                if (item.isSelected()) {
+                    if (!contains) {
+                        alertPane.add(item.getEquity().getAlertPanel());
+                    }
+                } else {
+                    if (contains) {
+                        alertPane.remove(item.getEquity().getAlertPanel());
+                    }
+                }
             }
         }
         
         
-    }
-    
-    private void updateAlerts() {
-        for (int i = 0; i < equitiesMenu.getItemCount(); i++) {
-            EquityMenuItem item = (EquityMenuItem) equitiesMenu.getItem(i);
-            boolean contains = new ArrayList(Arrays.asList(alertPane.getComponents())).contains(item.getEquity().getNewAlertPanel());
-            if (item.isSelected()) {
-                if (!contains) {
-                    alertPane.add(item.getEquity().getNewAlertPanel());
-                }
-            } else {
-                if (contains) {
-                    alertPane.remove(item.getEquity().getNewAlertPanel());
-                }
-            }
-            
-        }
     }
     
     private void equityBtnClicked(ItemEvent ie) {
         EquityMenuItem item = (EquityMenuItem) ie.getSource();
         
-        if (item.isSelected()) {
-            statusLabel.setText("Criando aba " + item.getText());
+        if (item.isSelected()) {            
             runUpdateThread();
         } else {
             for (int i = 0; i < graphsPane.getComponentCount(); i++) {
@@ -336,6 +334,8 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
+    
+    private Thread updater; 
     private final APIHandler apiHandler = new APIHandler("1624PUYB2HGRNQ9A");
     private Timer timer;
     // Variables declaration - do not modify//GEN-BEGIN:variables
