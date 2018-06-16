@@ -12,7 +12,7 @@ import java.text.NumberFormat;
 public class AlertPanel extends javax.swing.JPanel {
 
     /**
-     * Creates new form AlertaPanel
+     * Panel for easy administration of alerts on Alert Panel of MainFrames
      */
     public AlertPanel(String name) {
         initComponents();

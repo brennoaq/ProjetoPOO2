@@ -37,7 +37,7 @@ public class Equity {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         renderer.setSeriesPaint(0, Color.RED);
         renderer.setSeriesPaint(1, Color.GREEN);
-
+        
         renderer.setSeriesStroke(0, new BasicStroke(0.5f));
         renderer.setSeriesStroke(1, new BasicStroke(0.5f));
         

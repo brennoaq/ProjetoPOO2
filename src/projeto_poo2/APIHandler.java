@@ -20,27 +20,12 @@ public class APIHandler {
     public APIHandler(String APIKey) {
         this.APIKey = APIKey;
         
+        // Load some default equities, for test purposes
         this.equities = new ArrayList();
         equities.add(new Equity("PETROBRAS PN", "PETR4"));
         equities.add(new Equity("VALE ON", "VALE3"));
         equities.add(new Equity("PETROBRAS BR", "PETR3"));
         equities.add(new Equity("BRADESCO PN", "BBDC4"));
-    }
-        
-    public void addEquity(Equity equity) {
-        equities.add(equity);
-    }
-    
-    public void removeEquity(Equity equity) {
-        equities.remove(equity);
-    }
-    
-    public String getAPIKey() {
-        return APIKey;
-    }
-
-    public void setAPIKey(String APIKey) {
-        this.APIKey = APIKey;
     }
 
     public List<Equity> getEquities() {
@@ -50,7 +35,6 @@ public class APIHandler {
     public TimeSeries getSMAIndicatorData(Equity eq, int minuteInterval) throws MalformedURLException, IOException {
         TimeSeries output = new TimeSeries(eq.getName() + " SMA");
         JsonObject timestamps = new JsonObject();
-        int tryCount = 0;
         
         boolean done = false;
         while (!done) {
@@ -125,7 +109,7 @@ public class APIHandler {
                 .getAsJsonObject();
 
             if (root.has("Information")) {
-            throw new IOException(root.get("Information").getAsString());
+                throw new IOException(root.get("Information").getAsString());
 
             } else if (root.has("Time Series (1min)")) {
                 timestamps = root.get("Time Series (1min)").getAsJsonObject();
