@@ -35,32 +35,27 @@ public class APIHandler {
     public TimeSeries getSMAIndicatorData(Equity eq, int minuteInterval) throws MalformedURLException, IOException {
         TimeSeries output = new TimeSeries(eq.getName() + " SMA");
         JsonObject timestamps = new JsonObject();
-        
-        boolean done = false;
-        while (!done) {
-            URL url = new URL(APIURL + "query?function=SMA&"
-                    + "symbol=" + eq.getCode() + "&"
-                    + "interval=" + String.valueOf(minuteInterval) + "min&"
-                    + "time_period=10&"
-                    + "series_type=close&"
-                    + "apikey=" + APIKey);
 
-            URLConnection request = url.openConnection();
-            request.connect();
+        URL url = new URL(APIURL + "query?function=SMA&"
+                + "symbol=" + eq.getCode() + "&"
+                + "interval=" + String.valueOf(minuteInterval) + "min&"
+                + "time_period=10&"
+                + "series_type=close&"
+                + "apikey=" + APIKey);
 
-            JsonParser jp = new JsonParser();
-            JsonObject root;
-            root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
-                    .getAsJsonObject();
+        URLConnection request = url.openConnection();
+        request.connect();
 
-            if (root.has("Information")) {
-                throw new IOException(root.get("Information").getAsString());
-                
-            } else if (root.has("Technical Analysis: SMA")) {
-                timestamps = root.get("Technical Analysis: SMA").getAsJsonObject();
-            }
+        JsonParser jp = new JsonParser();
+        JsonObject root;
+        root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
+                 .getAsJsonObject();
 
-            done = true;        
+        if (root.has("Information")) {
+            throw new IOException(root.get("Information").getAsString());
+
+        } else if (root.has("Technical Analysis: SMA")) {
+            timestamps = root.get("Technical Analysis: SMA").getAsJsonObject();
         }
 
         int i = 1;
@@ -89,35 +84,30 @@ public class APIHandler {
     public TimeSeries getIntradayData(Equity eq, int minutesInterval) throws MalformedURLException, IOException, NullPointerException {
         TimeSeries output = new TimeSeries(eq.getName() + " data");
         JsonObject timestamps = new JsonObject();
-        int tryCount = 0;
         
-        boolean done = false;
-        while (!done) {
-            URL url = new URL(APIURL + "query?"
-                    + "function=TIME_SERIES_INTRADAY&"
-                    + "symbol=" + eq.getCode() + "&"
-                    + "interval=" + String.valueOf(minutesInterval) + "min&"
-                    + "apikey=" + APIKey + "&"
-                    + "dataype=json");
-            
-            URLConnection request = url.openConnection();
-            request.connect();   
 
-            JsonParser jp = new JsonParser();
-            JsonObject root;
-            root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
-                .getAsJsonObject();
+        URL url = new URL(APIURL + "query?"
+                + "function=TIME_SERIES_INTRADAY&"
+                + "symbol=" + eq.getCode() + "&"
+                + "interval=" + String.valueOf(minutesInterval) + "min&"
+                + "apikey=" + APIKey + "&"
+                + "dataype=json");
 
-            if (root.has("Information")) {
-                throw new IOException(root.get("Information").getAsString());
+        URLConnection request = url.openConnection();
+        request.connect();   
 
-            } else if (root.has("Time Series (1min)")) {
-                timestamps = root.get("Time Series (1min)").getAsJsonObject();
-            }
+        JsonParser jp = new JsonParser();
+        JsonObject root;
+        root = jp.parse(new InputStreamReader((InputStream) request.getContent()))
+            .getAsJsonObject();
 
-            done = true;
-        } 
-        
+        if (root.has("Information")) {
+            throw new IOException(root.get("Information").getAsString());
+
+        } else if (root.has("Time Series (" + String.valueOf(minutesInterval) + "min)")) {
+            timestamps = root.get("Time Series (" + String.valueOf(minutesInterval) + "min)").getAsJsonObject();
+        }
+
         int i = 1;
         for (Map.Entry<String, JsonElement> entry : timestamps.entrySet()) {
             String time = entry.getKey();

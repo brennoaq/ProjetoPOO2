@@ -64,10 +64,6 @@ public class Equity {
     public String getCode() {
         return code;
     }
-
-    public AlertPanel getAlert() {
-        return alert;
-    }
     
     public TimeSeries getData() {
         return data;
@@ -94,5 +90,4 @@ public class Equity {
     private JFreeChart chart;
     private String name;
     private String code;
-    private AlertPanel alert;
 }

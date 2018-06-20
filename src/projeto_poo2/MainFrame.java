@@ -248,20 +248,14 @@ public class MainFrame extends javax.swing.JFrame {
                 try {
                     data = apiHandler.getIntradayData(item.getEquity(), 1);
                 } catch (IOException ex) {
-                    System.err.println("Falha no processamento dos dados: " + item.getText());
-                    continue;
-                } catch (NullPointerException ex) {
-                    System.err.println("Deu pau nos pontos");
+                    ex.printStackTrace();
                     continue;
                 }
                 
                 try {
                     sma = apiHandler.getSMAIndicatorData(item.getEquity(), 1);
                 } catch (IOException ex) {
-                    System.err.println("Falha no processamento do SMA: " + item.getText());
-                    continue;
-                } catch (NullPointerException ex) {
-                    System.err.println("Deu pau no SMA");
+                    ex.printStackTrace();
                     continue;
                 }
         
@@ -293,14 +287,9 @@ public class MainFrame extends javax.swing.JFrame {
                 
                 boolean contains = new ArrayList(Arrays.asList(alertPane.getComponents()))
                                                  .contains(item.getEquity().getAlertPanel());
-                if (item.isSelected()) {
-                    if (!contains) {
-                        alertPane.add(item.getEquity().getAlertPanel());
-                    }
-                } else {
-                    if (contains) {
-                        alertPane.remove(item.getEquity().getAlertPanel());
-                    }
+
+                if (!contains) {
+                    alertPane.add(item.getEquity().getAlertPanel());
                 }
             }
         }
@@ -320,7 +309,9 @@ public class MainFrame extends javax.swing.JFrame {
                     break;
                 }
             }
-        }
+            
+            alertPane.remove(item.getEquity().getAlertPanel());
+        }        
     }
     
     /**

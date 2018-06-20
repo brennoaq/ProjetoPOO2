@@ -117,7 +117,7 @@ public class AlertPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    NumberFormat formatter;
+    private NumberFormat formatter;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane equityName;
     private javax.swing.JLabel jLabel1;
