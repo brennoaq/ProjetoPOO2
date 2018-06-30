@@ -61,7 +61,7 @@ public class MainFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        graphsPane = new javax.swing.JTabbedPane();
+        graphsPanel = new javax.swing.JTabbedPane();
         alertPane = new javax.swing.JPanel();
         statusBar = new javax.swing.JPanel();
         statusLabel = new javax.swing.JLabel();
@@ -74,7 +74,7 @@ public class MainFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
-        graphsPane.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        graphsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         alertPane.setDoubleBuffered(false);
 
@@ -89,7 +89,7 @@ public class MainFrame extends javax.swing.JFrame {
             .addGap(0, 666, Short.MAX_VALUE)
         );
 
-        graphsPane.addTab("Alertas", alertPane);
+        graphsPanel.addTab("Alertas", alertPane);
 
         statusBar.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -138,12 +138,12 @@ public class MainFrame extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(statusBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(graphsPane)
+            .addComponent(graphsPanel)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(graphsPane, javax.swing.GroupLayout.PREFERRED_SIZE, 695, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(graphsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 695, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(statusBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -226,86 +226,98 @@ public class MainFrame extends javax.swing.JFrame {
                                           JOptionPane.CLOSED_OPTION);
         }
     }//GEN-LAST:event_removeEquityActionPerformed
-    private void runUpdateThread() {
-        updater = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                statusLabel.setText("Atualizando gráficos...");
-                updateCharts();
-                statusLabel.setText("Graficos atualizados! " + ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.SECONDS));  
-            }
-        });
-        
-        updater.start();
-    }
-    private void updateCharts() {
-        TimeSeries sma;
-        TimeSeries data;
+
+    private void runUpdateThread() { 
+        // run one thread for each equity that needs to be updated
         for (int i = 0; i < equitiesMenu.getItemCount(); i++) {
             EquityMenuItem item = (EquityMenuItem) equitiesMenu.getItem(i);
-            
-            if (item.isSelected()) {    
-                try {
-                    data = apiHandler.getIntradayData(item.getEquity(), 1);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    continue;
-                }
-                
-                try {
-                    sma = apiHandler.getSMAIndicatorData(item.getEquity(), 1);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    continue;
-                }
-        
-                item.getEquity().initChart(data, sma);
-                
-                //
-                boolean tabInGraphs = false;
-                for (int j = 0; j < graphsPane.getTabCount(); j++) {
-                    if (graphsPane.getTitleAt(j).equals(item.getText())) {
-                        tabInGraphs = true;
-                        
-                        ChartPanel panel = (ChartPanel) graphsPane.getComponentAt(j);
-                        panel.setChart(item.getEquity().getChart()); 
-                        panel.setDomainZoomable(false);
-                        panel.setRangeZoomable(false);
+            if (item.isSelected()) {
+                updater = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusLabel.setText("Atualizando gráficos...");
+                        updateChart(item);
+                        statusLabel.setText("Grafico " + item.getText() + 
+                                " atualizado! " + ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.SECONDS));  
                     }
-                }
-                
-                if (!tabInGraphs) {
-                    statusLabel.setText("Criando aba " + item.getText());
-                    ChartPanel chartPanel = new ChartPanel(item.getEquity().getChart());
-                    chartPanel.setDomainZoomable(false);
-                    chartPanel.setRangeZoomable(false);
-                    graphsPane.addTab(item.getText(), chartPanel);
-                    graphsPane.setSelectedIndex(graphsPane.getTabCount()-1);
-                    statusLabel.setText("Aba " + item.getText() + " criada!");
-                }
-                //
-                
-                boolean contains = new ArrayList(Arrays.asList(alertPane.getComponents()))
-                                                 .contains(item.getEquity().getAlertPanel());
-
-                if (!contains) {
-                    alertPane.add(item.getEquity().getAlertPanel());
-                }
+                });
+                updater.start();
             }
         }
-        
-        
+    }
+    
+    
+    private void updateChart(EquityMenuItem item) {
+        System.out.println("Dealing with " + item.getEquity().getName());///////////////////////////////////////////////////////////////////////////
+        TimeSeries sma;
+        TimeSeries data;
+        if (item.isSelected()) {    
+            try {
+                data = apiHandler.getIntradayData(item.getEquity(), 1);
+            } catch (IOException ex) {
+                System.err.println("Deu pau pra pegar os valores");
+                return;
+            }
+
+            try {
+                sma = apiHandler.getSMAIndicatorData(item.getEquity(), 1);
+            } catch (IOException ex) {
+                System.err.println("Deu pau pra pegar o sma");
+                return;
+            }
+
+            item.getEquity().initChart(data, sma);
+
+
+            boolean tabInGraphs = false;
+            for (int j = 0; j < graphsPanel.getTabCount(); j++) {
+                if (graphsPanel.getTitleAt(j).equals(item.getText())) {
+                    tabInGraphs = true;
+
+                    ChartPanel panel = (ChartPanel) graphsPanel.getComponentAt(j);
+                    panel.setChart(item.getEquity().getChart()); 
+                    panel.setDomainZoomable(false);
+                    panel.setRangeZoomable(false);
+                }
+            }
+
+            if (!tabInGraphs) {
+                statusLabel.setText("Criando aba " + item.getText());
+                ChartPanel chartPanel = new ChartPanel(item.getEquity().getChart());
+                chartPanel.setDomainZoomable(false);
+                chartPanel.setRangeZoomable(false);
+                graphsPanel.addTab(item.getText(), chartPanel);
+                graphsPanel.setSelectedIndex(graphsPanel.getTabCount()-1);
+                statusLabel.setText("Aba " + item.getText() + " criada!");
+            }
+            //
+
+            boolean contains = new ArrayList(Arrays.asList(alertPane.getComponents()))
+                                             .contains(item.getEquity().getAlertPanel());
+
+            if (!contains) {
+                alertPane.add(item.getEquity().getAlertPanel());
+            }
+        }
     }
     
     private void equityBtnClicked(ItemEvent ie) {
         EquityMenuItem item = (EquityMenuItem) ie.getSource();
         
         if (item.isSelected()) {            
-            runUpdateThread();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    statusLabel.setText("Atualizando gráficos...");
+                    updateChart(item);
+                    statusLabel.setText("Grafico " + item.getText() + 
+                            " atualizado! " + ZonedDateTime.now().toLocalTime().truncatedTo(ChronoUnit.SECONDS));  
+                }
+            }).start();
         } else {
-            for (int i = 0; i < graphsPane.getComponentCount(); i++) {
-                if (graphsPane.getTitleAt(i).equals(item.getText())) {
-                    graphsPane.remove(i);
+            for (int i = 0; i < graphsPanel.getComponentCount(); i++) {
+                if (graphsPanel.getTitleAt(i).equals(item.getText())) {
+                    graphsPanel.remove(i);
                     break;
                 }
             }
@@ -333,7 +345,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem addEquityMenuItem;
     private javax.swing.JPanel alertPane;
     private javax.swing.JMenu equitiesMenu;
-    private javax.swing.JTabbedPane graphsPane;
+    private javax.swing.JTabbedPane graphsPanel;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu optionsMenu;
     private javax.swing.JMenuItem removeEquity;

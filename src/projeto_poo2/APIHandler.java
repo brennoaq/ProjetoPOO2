@@ -43,8 +43,17 @@ public class APIHandler {
                 + "series_type=close&"
                 + "apikey=" + APIKey);
 
-        URLConnection request = url.openConnection();
-        request.connect();
+        URLConnection request = null;
+        
+        try {
+            request = url.openConnection();
+            request.connect();   
+        } catch (IOException e) {
+            if (e.toString().contains("502")) {
+                System.out.println("Server not found in SMA: " + eq.getName());   
+                throw new IOException("");
+            }
+        }
 
         JsonParser jp = new JsonParser();
         JsonObject root;
@@ -92,9 +101,19 @@ public class APIHandler {
                 + "interval=" + String.valueOf(minutesInterval) + "min&"
                 + "apikey=" + APIKey + "&"
                 + "dataype=json");
-
-        URLConnection request = url.openConnection();
-        request.connect();   
+        
+        URLConnection request = null;
+        
+        try {
+            request = url.openConnection();
+            request.connect();   
+        } catch (IOException e) {
+            if (e.toString().contains("502")) {
+                System.out.println("Server not found in data: " + eq.getName());   
+                throw new IOException("");
+            }
+        }
+        
 
         JsonParser jp = new JsonParser();
         JsonObject root;

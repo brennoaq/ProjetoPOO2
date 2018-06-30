@@ -42,17 +42,18 @@ public class Equity {
         renderer.setSeriesStroke(1, new BasicStroke(0.5f));
         
         plot.setRenderer(renderer);
-        
-        this.sma = sma;
-        this.data = data;
-        if ((Double) this.data.getValue(data.getItemCount()-1) > (Double) this.sma.getValue(sma.getItemCount()-1)) {
+        System.out.println("Renderizando gráfico: " + this.name); ///////////////////////////////////////////////////////////////////////////
+        if ((Double) data.getValue(data.getItemCount()-1) > (Double) sma.getValue(sma.getItemCount()-1)) {
             alertPanel.setBuy();
         } else {
             alertPanel.setSell();
         }
         
-        alertPanel.setSMA((Double) this.sma.getValue(sma.getItemCount()-1));
-        alertPanel.setValue((Double) this.data.getValue(data.getItemCount()-1));
+        alertPanel.setSMA((Double) sma.getValue(sma.getItemCount()-1));
+        alertPanel.setValue((Double) data.getValue(data.getItemCount()-1));
+        
+        this.sma = sma;
+        this.data = data;
     }
 
     
